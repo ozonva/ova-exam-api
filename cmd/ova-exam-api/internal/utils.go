@@ -1,13 +1,8 @@
 package utils
 
 import (
-	"fmt"
 	"math"
 )
-
-func main() {
-	fmt.Println("Hello! It's ova-exam-api project!")
-}
 
 func Div(input []int, chunkSize int) [][]int {
 	if len(input) == 0 || chunkSize < 1 {
