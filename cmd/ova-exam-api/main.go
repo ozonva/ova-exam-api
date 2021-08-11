@@ -24,8 +24,8 @@ func main() {
 	fmt.Println(result2)
 
 
-	source3 := []string{"слово1", "слово2", "слово3", "слово2", "слово4"}
+	source3 := []string{"слово1", "слово2", "слово3", "слово4", "слово5"}
 	fmt.Println(source3)
-	result3 := utils.Filter(source3, "слово2")
+	result3 := utils.Filter(source3)
 	fmt.Println(result3)
 }

@@ -45,18 +45,25 @@ func Invert(input map[string]string) map[string]string {
 }
 
 
-func Filter(input []string, filter string) []string {
-	if len(input) == 0 || len(filter) == 0 {
+func Filter(input []string) []string {
+	if len(input) == 0 {
 		panic("Incorrect parameters")
 	}
-	
-	result := make([]string, 0)
-	for _, v := range input {
-		if v == filter {
-			continue
-		}
 
-		result = append(result, v)
+	filterElements := []string{"слово1", "слово4", "слово5"}
+
+	result := make([]string, 0)
+	for _, inputElement := range input {
+		isFound := false
+		for _, filterElement := range filterElements {
+			if inputElement == filterElement {
+				isFound = true
+				break
+			}
+		}
+		if !isFound {
+			result = append(result, inputElement)
+		}
 	}
 
 	return result
