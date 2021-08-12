@@ -12,11 +12,11 @@ func Div(input []int, chunkSize int) [][]int {
 	var floatChunkSize = float64(len(input)) / float64(chunkSize)
 	var size = int(math.Ceil(floatChunkSize))
 	result := make([][]int, size)
-	for i:=0;i<size;i++ {
+	for i := 0; i < size; i++ {
 		currentChunkStart := i * chunkSize
 		var currentChunkEnd int
 
-		if currentChunkStart + chunkSize < len(input) {
+		if currentChunkStart+chunkSize < len(input) {
 			currentChunkEnd = currentChunkStart + chunkSize
 		} else {
 			currentChunkEnd = len(input)
@@ -29,7 +29,7 @@ func Div(input []int, chunkSize int) [][]int {
 }
 
 func Invert(input map[string]string) map[string]string {
-	if input == nil || len(input) == 0{
+	if input == nil || len(input) == 0 {
 		panic("Incorrect parameters")
 	}
 
@@ -44,26 +44,19 @@ func Invert(input map[string]string) map[string]string {
 	return result
 }
 
-
 func Filter(input []string) []string {
 	if len(input) == 0 {
 		panic("Incorrect parameters")
 	}
 
-	filterElements := []string{"слово1", "слово4", "слово5"}
+	filterElements := map[string]bool{"слово1": true, "слово4": true, "слово5": true}
 
 	result := make([]string, 0)
 	for _, inputElement := range input {
-		isFound := false
-		for _, filterElement := range filterElements {
-			if inputElement == filterElement {
-				isFound = true
-				break
-			}
+		if _, ok := filterElements[inputElement]; ok {
+			continue
 		}
-		if !isFound {
-			result = append(result, inputElement)
-		}
+		result = append(result, inputElement)
 	}
 
 	return result
