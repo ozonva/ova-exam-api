@@ -1,7 +1,9 @@
 package utils
 
 import (
+	"errors"
 	"math"
+	"ova-exam-api/cmd/ova-exam-api/domain/entity/user"
 )
 
 func Div(input []int, chunkSize int) [][]int {
@@ -60,4 +62,44 @@ func Filter(input []string) []string {
 	}
 
 	return result
+}
+func SplitToBulks(entities []user.User, butchSize uint) [][]user.User {
+	if len(entities) == 0 {
+		panic("Incorrect parameters")
+	}
+
+	var floatButchSize = float64(len(entities)) / float64(butchSize)
+	var size = int(math.Ceil(floatButchSize))
+	result := make([][]user.User, size)
+	for i := 0; i < size; i++ {
+		currentChunkStart := i * int(butchSize)
+		var currentChunkEnd int
+
+		if currentChunkStart+int(butchSize) < len(entities) {
+			currentChunkEnd = currentChunkStart + int(butchSize)
+		} else {
+			currentChunkEnd = len(entities)
+		}
+
+		result[i] = entities[currentChunkStart:currentChunkEnd]
+	}
+
+	return result
+}
+
+func UsersToMap(entities []user.User) (map[uint64]user.User, error) {
+	if entities == nil || len(entities) == 0 {
+		return nil, errors.New("incorrect parameters")
+	}
+
+	result := make(map[uint64]user.User, len(entities))
+	for _, value := range entities {
+		if _, ok := result[value.UserId]; ok {
+			return nil, errors.New("key value is duplicated")
+		}
+
+		result[value.UserId] = value
+	}
+
+	return result, nil
 }
