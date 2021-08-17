@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"ova-exam-api/cmd/ova-exam-api/domain/entity"
-	"ova-exam-api/cmd/ova-exam-api/domain/entity/user"
-	utils "ova-exam-api/cmd/ova-exam-api/internal"
+	"ova-exam-api/internal"
+	"ova-exam-api/internal/domain/entity"
+	"ova-exam-api/internal/domain/entity/user"
+	"path"
 )
 
 func OpenAndCloseFile(fileName string) {
@@ -22,9 +23,9 @@ func OpenAndCloseFile(fileName string) {
 }
 
 func main() {
-	// task a
+	// subtask a
 	pwd, _ := os.Getwd()
-	fileName := pwd + "\\cmd\\ova-exam-api\\Makefile"
+	fileName := path.Join(pwd, "Makefile")
 
 	for i := 0; i < 10; i++ {
 		OpenAndCloseFile(fileName)
@@ -32,16 +33,16 @@ func main() {
 
 	// subtask b
 	us := user.User{
-		UserId: 1,
-		Entity:    entity.Entity{},
-		Email:     "12",
-		Password:  "12",
+		UserId:   1,
+		Entity:   entity.Entity{},
+		Email:    "12",
+		Password: "12",
 	}
 
 	fmt.Println(us.String())
 
 	// subtask c
-	source1 := [] user.User {
+	source1 := []user.User{
 		{UserId: 1},
 		{UserId: 2},
 		{UserId: 3},

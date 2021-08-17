@@ -1,7 +1,7 @@
 package user
 
 import (
-	"ova-exam-api/cmd/ova-exam-api/domain/entity"
+	"ova-exam-api/internal/domain/entity"
 )
 
 type User struct {

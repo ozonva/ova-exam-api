@@ -3,7 +3,7 @@ package utils
 import (
 	"errors"
 	"math"
-	"ova-exam-api/cmd/ova-exam-api/domain/entity/user"
+	"ova-exam-api/internal/domain/entity/user"
 )
 
 func Div(input []int, chunkSize int) [][]int {
