@@ -17,7 +17,6 @@ type Saver interface {
 func NewSaver(
 	capacity uint,
 	flusher flusher.Flusher,
-// ...
 ) Saver {
 	saver := &saver{
 		mutex: sync.Mutex{},
@@ -34,10 +33,6 @@ func NewSaver(
 		}
 	}()
 
-	// interruptCh := make(chan os.Signal, 1)
-	// signal.Notify(interruptCh, os.Interrupt, syscall.SIGTERM)
-	// fmt.Printf("Got %v...\n", <-interruptCh)
-
 	return saver
 }
 
@@ -51,9 +46,10 @@ type saver struct{
 func (s *saver) Save(entity user.User) {
 	fmt.Println("Save on saver called")
 	s.users = append(s.users, entity)
-	if len(s.users) < int(s.capacity){
+	if len(s.users) <= int(s.capacity){
 		return
 	}
+	s.Close()
 }
 
 func (s *saver) Close() {
