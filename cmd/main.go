@@ -1,60 +1,31 @@
 package main
 
 import (
-	"fmt"
-	"log"
-	"os"
-	"ova-exam-api/internal/domain/entity"
 	"ova-exam-api/internal/domain/entity/user"
-	"ova-exam-api/internal/utils"
-	"path"
+	"ova-exam-api/internal/flusher"
+	"ova-exam-api/internal/repo"
+	"ova-exam-api/internal/saver"
+	"time"
 )
 
-func OpenAndCloseFile(fileName string) {
-	file, err := os.Open(fileName)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println("open file", file)
-	defer func() {
-		fmt.Println("close file", file)
-		file.Close()
-	}()
-}
-
 func main() {
-	// subtask a
-	pwd, _ := os.Getwd()
-	fileName := path.Join(pwd, "Makefile")
+	repo := repo.NewRepo("data.txt")
+	flusher := flusher.NewFlusher(2, repo)
+	saver := saver.NewSaver(3, flusher)
+	user1 := user.User{UserId: 1}
+	user2 := user.User{UserId: 2}
+	user3 := user.User{UserId: 3}
+	user4 := user.User{UserId: 4}
+	user5 := user.User{UserId: 5}
+	user6 := user.User{UserId: 6}
 
-	for i := 0; i < 10; i++ {
-		OpenAndCloseFile(fileName)
-	}
-
-	// subtask b
-	us := user.User{
-		UserId:   1,
-		Entity:   entity.Entity{},
-		Email:    "12",
-		Password: "12",
-	}
-
-	fmt.Println(us.String())
-
-	// subtask c
-	source1 := []user.User{
-		{UserId: 1},
-		{UserId: 2},
-		{UserId: 3},
-		{UserId: 4},
-		{UserId: 5},
-		{UserId: 6},
-	}
-	fmt.Println(source1)
-	result1 := utils.SplitToBulks(source1, 2)
-	fmt.Println(result1)
-
-	if result2, err := utils.UsersToMap(source1); err == nil{
-		fmt.Println(result2)
-	}
+	saver.Save(user1)
+	saver.Save(user2)
+	time.Sleep(time.Millisecond * 5000)
+	saver.Save(user3)
+	time.Sleep(time.Millisecond * 1000)
+	saver.Save(user4)
+	saver.Save(user5)
+	saver.Save(user6)
+	saver.Close()
 }

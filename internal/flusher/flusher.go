@@ -1,9 +1,9 @@
 package flusher
 
 import (
+	"ova-exam-api/internal/domain/entity/user"
 	"ova-exam-api/internal/repo"
 	"ova-exam-api/internal/utils"
-	"ova-exam-api/internal/domain/entity/user"
 )
 
 // Flusher - интерфейс для сброса задач в хранилище
@@ -23,22 +23,18 @@ func NewFlusher(
 }
 
 type flusher struct {
-	storageUsers []user.User
 	chunkSize int
 	entityRepo  repo.Repo
 }
 
-func (f flusher) Flush(users []user.User) []user.User {
-	f.storageUsers = append(f.storageUsers, users...)
-
-	bulks := utils.SplitToBulks(f.storageUsers, uint(f.chunkSize))
-	for _, value := range bulks {
-		if len(value) < f.chunkSize{
-			f.storageUsers = value
-
-			return f.storageUsers
+func (f *flusher) Flush(users []user.User) []user.User {
+	bulks := utils.SplitToBulks(users, uint(f.chunkSize))
+	for n, value := range bulks {
+		err := f.entityRepo.AddEntities(value)
+		if err != nil {
+			// Возвращает пользователей которых не удалось сохранить
+			return users[n * f.chunkSize:]
 		}
-		f.entityRepo.AddEntities(value)
 	}
 
 	return nil
