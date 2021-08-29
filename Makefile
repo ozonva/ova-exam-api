@@ -50,7 +50,7 @@ generate:
 LOCAL_BIN:=$(CURDIR)/bin
 
 .PHONY: deps
-deps2: .install-go-deps
+deps: .install-go-deps
 
 .PHONY: .install-go-deps
 .install-go-deps:
