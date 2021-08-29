@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+package ozonva.ova_exam_api;
+
+option go_package = "github.com/ozonva/ova-exam-api/pkg/ova-exam-api;ova_exam_api";
+
+// Работа с пользователями
+service Users {
+  // Создание пользователя
+  rpc CreateUserV1(CreateUserV1Request) returns (google.protobuf.Empty) {
+  }
+  // Возвращает информацию о пользователе
+  rpc DescribeUserV1(DescribeUserV1Request) returns (UserV1) {
+  }
+  // Список пользователей
+  rpc ListUsersV1(google.protobuf.Empty) returns (ListUsersV1Response) {
+  }
+  // Удаляет пользователя
+  rpc RemoveUserV1(RemoveUserV1Request) returns (google.protobuf.Empty) {
+  }
+}
+message CreateUserV1Request {
+  string email = 2;
+  string password = 3;
+}
+
+message DescribeUserV1Request{
+  int64 user_id = 1;
+}
+
+message UserV1 {
+  int64 user_id = 1;
+  string email = 2;
+  string password = 3;
+}
+
+message ListUsersV1Response {
+  repeated UserV1 users = 1;
+}
+
+message RemoveUserV1Request {
+  int64 user_id = 1;
+}
