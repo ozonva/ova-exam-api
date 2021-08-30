@@ -1,5 +1,36 @@
-build:
-	go build -o bin/main cmd/main.go
+GO_VERSION_SHORT:=$(shell echo `go version` | sed -E 's/.* go(.*) .*/\1/g')
+ifneq ("1.16","$(shell printf "$(GO_VERSION_SHORT)\n1.16" | sort -V | head -1)")
+$(error NEED GO VERSION >= 1.16. Found: $(GO_VERSION_SHORT))
+endif
+
+export GO111MODULE=on
+export GOPROXY=https://proxy.golang.org|direct
+
+PGV_VERSION:="v0.6.1"
+GOOGLEAPIS_VERSION="master"
+BUF_VERSION:="v0.51.0"
+
+all: generate build
+
+.PHONY: vendor-proto
+vendor-proto:
+	$(eval THIRD_PARTY:=$(CURDIR)/third_party)
+	@[ -f $(THIRD_PARTY)/validate/validate.proto ] || (mkdir -p $(THIRD_PARTY)/validate/ && curl -sSL0 https://raw.githubusercontent.com/envoyproxy/protoc-gen-validate/$(PGV_VERSION)/validate/validate.proto -o $(THIRD_PARTY)/validate/validate.proto)
+	@[ -f $(THIRD_PARTY)/google/api/http.proto ] || (mkdir -p $(THIRD_PARTY)/google/api/ && curl -sSL0 https://raw.githubusercontent.com/googleapis/googleapis/$(GOOGLEAPIS_VERSION)/google/api/http.proto -o $(THIRD_PARTY)/google/api/http.proto)
+	@[ -f $(THIRD_PARTY)/google/api/annotations.proto ] || (mkdir -p $(THIRD_PARTY)/google/api/ && curl -sSL0 https://raw.githubusercontent.com/googleapis/googleapis/$(GOOGLEAPIS_VERSION)/google/api/annotations.proto -o $(THIRD_PARTY)/google/api/annotations.proto)
+
+GOBIN?=$(GOPATH)/bin
+
+.PHONY: build
+build: deps
+	go build -o $(CURDIR)/bin/main $(CURDIR)/cmd/main.go
+
+bin-deps:
+	go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.1
+	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.1.0
+	go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v2.5.0
+	go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@v2.5.0
+	go install github.com/envoyproxy/protoc-gen-validate@$(PGV_VERSION)
 
 run:
 	go run cmd/main.go
@@ -9,3 +40,27 @@ test:
 
 generate-mocks:
 	go generate ./...
+
+generate:
+	@protoc -I vendor.protogen --go_out=pkg \
+ 		--go_opt=paths=import --go-grpc_out=pkg \
+		--go-grpc_opt=paths=import --proto_path=api/ova-exam-api \
+		api/ova-exam-api/users.proto
+
+LOCAL_BIN:=$(CURDIR)/bin
+
+.PHONY: deps
+deps: .install-go-deps
+
+.PHONY: .install-go-deps
+.install-go-deps:
+	ls go.mod || go mod init github.com/ozonva/ova-exam-api
+	GOBIN=$(LOCAL_BIN) go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
+	GOBIN=$(LOCAL_BIN) go get -u github.com/golang/protobuf/proto
+	GOBIN=$(LOCAL_BIN) go get -u github.com/golang/protobuf/protoc-gen-go
+	GOBIN=$(LOCAL_BIN) go get -u github.com/rs/zerolog/log
+	GOBIN=$(LOCAL_BIN) go get -u google.golang.org/grpc
+	GOBIN=$(LOCAL_BIN) go get -u google.golang.org/grpc/cmd/protoc-gen-go-grpc
+	GOBIN=$(LOCAL_BIN) go get -u google.golang.org/protobuf/types/known/emptypb
+	GOBIN=$(LOCAL_BIN) go install google.golang.org/grpc/cmd/protoc-gen-go-grpc
+	GOBIN=$(LOCAL_BIN) go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger

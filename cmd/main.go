@@ -1,31 +1,39 @@
 package main
 
 import (
-	"ova-exam-api/internal/domain/entity/user"
-	"ova-exam-api/internal/flusher"
-	"ova-exam-api/internal/repo"
-	"ova-exam-api/internal/saver"
-	"time"
+	"log"
+	"net"
+
+	"google.golang.org/grpc"
+	api "ova-exam-api/internal/app"
+
+	desc "ova-exam-api/pkg/github.com/ozonva/ova-exam-api/pkg/ova-exam-api"
 )
 
-func main() {
-	repo := repo.NewRepo("data.txt")
-	flusher := flusher.NewFlusher(2, repo)
-	saver := saver.NewSaver(3, flusher)
-	user1 := user.User{UserId: 1}
-	user2 := user.User{UserId: 2}
-	user3 := user.User{UserId: 3}
-	user4 := user.User{UserId: 4}
-	user5 := user.User{UserId: 5}
-	user6 := user.User{UserId: 6}
+const (
+	grpcPort = ":82"
+	grpcServerEndpoint = "localhost:82"
+)
 
-	saver.Save(user1)
-	saver.Save(user2)
-	time.Sleep(time.Millisecond * 5000)
-	saver.Save(user3)
-	time.Sleep(time.Millisecond * 1000)
-	saver.Save(user4)
-	saver.Save(user5)
-	saver.Save(user6)
-	saver.Close()
+func run() error {
+	listen, err := net.Listen("tcp", grpcPort)
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+
+	s := grpc.NewServer()
+	desc.RegisterUsersServer(s, api.NewOvaExamAPI())
+
+	if err := s.Serve(listen); err != nil {
+		log.Fatalf("failed to serve: %v", err)
+	}
+
+	return nil
+}
+
+
+func main() {
+	if err := run(); err != nil {
+		log.Fatal(err)
+	}
 }
