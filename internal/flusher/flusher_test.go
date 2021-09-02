@@ -43,7 +43,7 @@ var _ = Describe("Flusher", func() {
 	Context("Valid case", func() {
 		var users []user.User
 		BeforeEach(func() {
-			mockRepo.EXPECT().AddEntities(gomock.Any()).Return(nil).Times(5)
+			mockRepo.EXPECT().AddEntities(gomock.Any()).Return(nil).Times(6)
 			users = getUsers(11)
 		})
 
@@ -51,7 +51,7 @@ var _ = Describe("Flusher", func() {
 			flusher := flusher.NewFlusher(2, mockRepo)
 			notSaved := flusher.Flush(users)
 
-			gomega.Ω(notSaved).Should(gomega.HaveLen(1))
+			gomega.Ω(notSaved).Should(gomega.HaveLen(0))
 		})
 	})
 })
