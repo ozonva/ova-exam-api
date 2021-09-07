@@ -11,8 +11,11 @@ service Users {
   // Создание пользователя
   rpc CreateUserV1(CreateUserV1Request) returns (google.protobuf.Empty) {
   }
+  // Создание пользователей
+  rpc MultiCreateUserV1(MultyCreateUserV1Request) returns (google.protobuf.Empty) {
+  }
   // Возвращает информацию о пользователе
-  rpc DescribeUserV1(DescribeUserV1Request) returns (UserV1) {
+  rpc DescribeUserV1(DescribeUserV1Request) returns (UserV1Response) {
   }
   // Список пользователей
   rpc ListUsersV1(google.protobuf.Empty) returns (ListUsersV1Response) {
@@ -20,26 +23,44 @@ service Users {
   // Удаляет пользователя
   rpc RemoveUserV1(RemoveUserV1Request) returns (google.protobuf.Empty) {
   }
+  // Изменяет пользователя
+  rpc UpdateUserV1(UpdateUserV1Request) returns (google.protobuf.Empty) {
+  }
 }
 message CreateUserV1Request {
-  string email = 2;
-  string password = 3;
+  string email = 1;
+  string password = 2;
+}
+
+message MultyCreateUserV1Request {
+  repeated UserV1Request users = 1;
 }
 
 message DescribeUserV1Request{
   int64 user_id = 1;
 }
 
-message UserV1 {
+message UserV1Request {
+  string email = 1;
+  string password = 2;
+}
+
+message UserV1Response {
   int64 user_id = 1;
   string email = 2;
   string password = 3;
 }
 
 message ListUsersV1Response {
-  repeated UserV1 users = 1;
+  repeated UserV1Response users = 1;
 }
 
 message RemoveUserV1Request {
   int64 user_id = 1;
+}
+
+message UpdateUserV1Request {
+  int64 user_id = 1;
+  string email = 2;
+  string password = 3;
 }

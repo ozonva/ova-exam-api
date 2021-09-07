@@ -2,7 +2,7 @@ package repo
 
 import (
 	"database/sql"
-	"fmt"
+	"errors"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/rs/zerolog/log"
 	"ova-exam-api/internal/domain/entity"
@@ -16,6 +16,7 @@ type Repo interface {
 	ListEntities(limit, offset uint64) ([]user.User, error)
 	DescribeEntity(userId uint64) (*user.User, error)
 	RemoveEntity(userId uint64) error
+	UpdateEntity(entity user.User) error
 }
 
 // NewRepo возвращает Repo
@@ -88,8 +89,6 @@ func (r repo) ListEntities(limit, offset uint64) ([]user.User, error) {
 			Password: password,
 		}
 		result = append(result, existUser)
-		// обрабатываем строку
-		fmt.Printf("%d %s %s %s %s\n", id, email, password, createat, updateat)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -104,8 +103,6 @@ func (r repo) DescribeEntity(userId uint64) (*user.User, error) {
 		RunWith(r.db).
 		PlaceholderFormat(sq.Dollar).
 		Where(sq.Eq{"id": userId})
-
-	log.Print(query.ToSql())
 
 	var id uint64
 	var email, password string
@@ -130,7 +127,6 @@ func (r repo) DescribeEntity(userId uint64) (*user.User, error) {
 		Email:    email,
 		Password: password,
 	}
-	fmt.Printf("%d %s %s %s %s\n", id, email, password, createat, updateat)
 
 	return &existUser, nil
 }
@@ -144,4 +140,30 @@ func (r repo) RemoveEntity(userId uint64) error {
 	_, err := query.Exec()
 
 	return err
+}
+
+func (r repo) UpdateEntity(entity user.User) error {
+	query := sq.Update(r.tableName).
+		RunWith(r.db).
+		PlaceholderFormat(sq.Dollar).
+		Where(sq.Eq{"id": entity.UserId}).
+		Set("Email", entity.Email).
+		Set("Password", entity.Password).
+		Set("updatedAt", time.Now())
+
+	result, err := query.Exec()
+	if err != nil{
+		return err
+	}
+
+	lastAffected, err := result.RowsAffected()
+	if err != nil{
+		return err
+	}
+
+	if lastAffected == 0 {
+		return errors.New("entity not exist")
+	}
+
+	return nil
 }

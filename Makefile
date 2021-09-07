@@ -60,11 +60,16 @@ deps: .install-go-deps
 	GOBIN=$(LOCAL_BIN) go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
 	GOBIN=$(LOCAL_BIN) go get -u github.com/golang/protobuf/proto
 	GOBIN=$(LOCAL_BIN) go get -u github.com/golang/protobuf/protoc-gen-go
+	GOBIN=$(LOCAL_BIN) go get -u github.com/opentracing/opentracing-go
 	GOBIN=$(LOCAL_BIN) go get -u github.com/jmoiron/sqlx
 	GOBIN=$(LOCAL_BIN) go get -u github.com/jackc/pgx/stdlib
 	GOBIN=$(LOCAL_BIN) go get -u github.com/Masterminds/squirrel
 	GOBIN=$(LOCAL_BIN) go get -u github.com/pressly/goose/v3/cmd/goose
+	GOBIN=$(LOCAL_BIN) go get -u github.com/prometheus/client_golang/prometheus/promhttp
+	GOBIN=$(LOCAL_BIN) go get -u github.com/slok/go-http-metrics/metrics/prometheus
+ 	GOBIN=$(LOCAL_BIN) go get -u github.com/slok/go-http-metrics/middleware
 	GOBIN=$(LOCAL_BIN) go get -u github.com/rs/zerolog/log
+	GOBIN=$(LOCAL_BIN) go get -u github.com/segmentio/kafka-go
 	GOBIN=$(LOCAL_BIN) go get -u google.golang.org/grpc
 	GOBIN=$(LOCAL_BIN) go get -u google.golang.org/grpc/cmd/protoc-gen-go-grpc
 	GOBIN=$(LOCAL_BIN) go get -u google.golang.org/protobuf/types/known/emptypb

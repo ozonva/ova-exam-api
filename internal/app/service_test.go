@@ -3,7 +3,6 @@ package ovaexamapi_test
 import (
 	"database/sql"
 	"database/sql/driver"
-	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/golang/mock/gomock"
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/protobuf/types/known/emptypb"
