@@ -1,11 +1,15 @@
 package repo
 
 import (
-	"encoding/json"
+	"context"
+	"database/sql"
 	"fmt"
-	"os"
+	sq "github.com/Masterminds/squirrel"
+	"github.com/jmoiron/sqlx"
+	"github.com/rs/zerolog/log"
+	"ova-exam-api/internal/domain/entity"
 	"ova-exam-api/internal/domain/entity/user"
-	"path"
+	"time"
 )
 
 // Repo - интерфейс хранилища для сущности User
@@ -13,55 +17,145 @@ type Repo interface {
 	AddEntities(entities []user.User) error
 	ListEntities(limit, offset uint64) ([]user.User, error)
 	DescribeEntity(userId uint64) (*user.User, error)
+	RemoveEntity(userId uint64) error
 }
 
-// NewRepo возвращает Repo с поддержкой записи в файл
+// NewRepo возвращает Repo
 func NewRepo(
-	fileName string,
+	connectionString string,
 ) Repo {
+	newDb, err := sqlx.Connect("pgx", connectionString)
+	if err != nil {
+		log.Fatal().Msg(fmt.Sprintf("failed to load driver: %v", err))
+	}
+
+	ctx := context.Background()
+
+	dbPingErr := newDb.PingContext(ctx)
+	if dbPingErr != nil {
+		log.Fatal().Msg(fmt.Sprintf("failed to connect to db: %v", err))
+	}
+
 	return &repo{
-		fileName: fileName,
+		tableName: "users",
+		db: newDb,
 	}
 }
 
 type repo struct {
-	fileName string
+	tableName string
+	db sq.BaseRunner
 }
 
-func (r *repo) AddEntities(entities []user.User) error {
-	pwd, pathErr := os.Getwd()
-	fileName := path.Join(pwd, r.fileName)
-	if pathErr != nil {
-		return pathErr
+func (r *repo) AddEntities(users []user.User) error {
+	query := sq.Insert(r.tableName).
+		Columns("Email", "Password", "createdAt").
+		RunWith(r.db).
+		PlaceholderFormat(sq.Dollar)
+
+	for _, newUser := range users {
+		query = query.
+			Values(newUser.Email, newUser.Password, time.Now())
 	}
 
-	file, err := os.OpenFile(fileName, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		fmt.Println("close file", file)
-		file.Close()
-	}()
+	_, err := query.Exec()
 
-	fmt.Println("open file", file)
-
-	data, marshalErr := json.MarshalIndent(entities, "", " ")
-	if marshalErr != nil {
-		return marshalErr
-	}
-
-	if _, err := file.Write(data); err != nil {
-		return err
-	}
-	fmt.Printf("users %d wrote to file\n", len(entities))
-	return nil
+	return err
 }
 
 func (r repo) ListEntities(limit, offset uint64) ([]user.User, error) {
-	panic("implement me")
+	query := sq.Select("Id", "Email", "Password", "createdAt", "updatedAt").
+		From("users").
+		RunWith(r.db).
+		PlaceholderFormat(sq.Dollar).
+		Offset(offset).
+		Limit(limit)
+	log.Print(query.ToSql())
+
+	rows, err := query.Query()
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	result := make([]user.User, 0)
+	for rows.Next() {
+		var id uint64
+		var email, password string
+		var createat time.Time
+		var updateatDb sql.NullTime
+		if err := rows.Scan(&id, &email, &password, &createat, &updateatDb); err != nil {
+			return nil, err
+		}
+
+		var updateat time.Time
+		if updateatDb.Valid{
+			updateat = updateatDb.Time
+		}
+
+		existUser := user.User{
+			Entity:   entity.Entity{
+				CreatedAt: createat,
+				UpdatedAt: updateat,
+			},
+			UserId:   id,
+			Email:    email,
+			Password: password,
+		}
+		result = append(result, existUser)
+		// обрабатываем строку
+		fmt.Printf("%d %s %s %s %s\n", id, email, password, createat, updateat)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 func (r repo) DescribeEntity(userId uint64) (*user.User, error) {
-	panic("implement me")
+	query := sq.Select("Id", "Email", "Password", "createdAt", "updatedAt").
+		From("users").
+		RunWith(r.db).
+		PlaceholderFormat(sq.Dollar).
+		Where(sq.Eq{"id": userId})
+
+	log.Print(query.ToSql())
+
+	var id uint64
+	var email, password string
+	var createat time.Time
+	var updateatDb sql.NullTime
+
+	err := query.QueryRow().Scan(&id, &email, &password, &createat, &updateatDb)
+	if err != nil {
+		return nil, err
+	}
+	var updateat time.Time
+	if updateatDb.Valid{
+		updateat = updateatDb.Time
+	}
+
+	existUser := user.User{
+		Entity:   entity.Entity{
+			CreatedAt: createat,
+			UpdatedAt: updateat,
+		},
+		UserId:   id,
+		Email:    email,
+		Password: password,
+	}
+	fmt.Printf("%d %s %s %s %s\n", id, email, password, createat, updateat)
+
+	return &existUser, nil
+}
+
+func (r repo) RemoveEntity(userId uint64) error {
+	query := sq.Delete(r.tableName).
+		Where(sq.Eq{"id": userId}).
+		RunWith(r.db).
+		PlaceholderFormat(sq.Dollar)
+
+	_, err := query.Exec()
+
+	return err
 }
