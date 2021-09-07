@@ -8,7 +8,7 @@ export GOPROXY=https://proxy.golang.org|direct
 
 PGV_VERSION:="v0.6.1"
 GOOGLEAPIS_VERSION="master"
-BUF_VERSION:="v0.51.0"
+DB_STRING:= "host=localhost port=5432 user=ova_exam_api_user password=ova_exam_api_password dbname=ova_exam_api sslmode=disable"
 
 all: generate build
 
@@ -36,6 +36,7 @@ run:
 	go run cmd/main.go
 
 test:
+	go test ova-exam-api/internal/app
 	go test ova-exam-api/internal/flusher
 
 generate-mocks:
@@ -55,12 +56,36 @@ deps: .install-go-deps
 .PHONY: .install-go-deps
 .install-go-deps:
 	ls go.mod || go mod init github.com/ozonva/ova-exam-api
+	GOBIN=$(LOCAL_BIN) go get -u github.com/DATA-DOG/go-sqlmock
 	GOBIN=$(LOCAL_BIN) go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
 	GOBIN=$(LOCAL_BIN) go get -u github.com/golang/protobuf/proto
 	GOBIN=$(LOCAL_BIN) go get -u github.com/golang/protobuf/protoc-gen-go
+	GOBIN=$(LOCAL_BIN) go get -u github.com/opentracing/opentracing-go
+	GOBIN=$(LOCAL_BIN) go get -u github.com/jmoiron/sqlx
+	GOBIN=$(LOCAL_BIN) go get -u github.com/jackc/pgx/stdlib
+	GOBIN=$(LOCAL_BIN) go get -u github.com/Masterminds/squirrel
+	GOBIN=$(LOCAL_BIN) go get -u github.com/pressly/goose/v3/cmd/goose
+	GOBIN=$(LOCAL_BIN) go get -u github.com/prometheus/client_golang/prometheus/promhttp
+	GOBIN=$(LOCAL_BIN) go get -u github.com/slok/go-http-metrics/metrics/prometheus
+ 	GOBIN=$(LOCAL_BIN) go get -u github.com/slok/go-http-metrics/middleware
 	GOBIN=$(LOCAL_BIN) go get -u github.com/rs/zerolog/log
+	GOBIN=$(LOCAL_BIN) go get -u github.com/segmentio/kafka-go
 	GOBIN=$(LOCAL_BIN) go get -u google.golang.org/grpc
 	GOBIN=$(LOCAL_BIN) go get -u google.golang.org/grpc/cmd/protoc-gen-go-grpc
 	GOBIN=$(LOCAL_BIN) go get -u google.golang.org/protobuf/types/known/emptypb
 	GOBIN=$(LOCAL_BIN) go install google.golang.org/grpc/cmd/protoc-gen-go-grpc
 	GOBIN=$(LOCAL_BIN) go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
+
+.PHONY: goose-up
+goose-up: .goose-up
+
+.PHONY: .goose-up
+.goose-up:
+	GOBIN=$(LOCAL_BIN) bin/goose -dir $(CURDIR)/migrations/ postgres $(DB_STRING) up
+
+.PHONY: goose-status
+goose-status: .goose-status
+
+.PHONY: .goose-status
+.goose-status:
+	$(LOCAL_BIN)/goose -dir $(CURDIR)/migrations/ postgres $(DB_STRING) status

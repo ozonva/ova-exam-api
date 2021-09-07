@@ -21,12 +21,16 @@ const _ = grpc.SupportPackageIsVersion7
 type UsersClient interface {
 	// Создание пользователя
 	CreateUserV1(ctx context.Context, in *CreateUserV1Request, opts ...grpc.CallOption) (*empty.Empty, error)
+	// Создание пользователей
+	MultiCreateUserV1(ctx context.Context, in *MultyCreateUserV1Request, opts ...grpc.CallOption) (*empty.Empty, error)
 	// Возвращает информацию о пользователе
-	DescribeUserV1(ctx context.Context, in *DescribeUserV1Request, opts ...grpc.CallOption) (*UserV1, error)
+	DescribeUserV1(ctx context.Context, in *DescribeUserV1Request, opts ...grpc.CallOption) (*UserV1Response, error)
 	// Список пользователей
 	ListUsersV1(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ListUsersV1Response, error)
 	// Удаляет пользователя
 	RemoveUserV1(ctx context.Context, in *RemoveUserV1Request, opts ...grpc.CallOption) (*empty.Empty, error)
+	// Изменяет пользователя
+	UpdateUserV1(ctx context.Context, in *UpdateUserV1Request, opts ...grpc.CallOption) (*empty.Empty, error)
 }
 
 type usersClient struct {
@@ -46,8 +50,17 @@ func (c *usersClient) CreateUserV1(ctx context.Context, in *CreateUserV1Request,
 	return out, nil
 }
 
-func (c *usersClient) DescribeUserV1(ctx context.Context, in *DescribeUserV1Request, opts ...grpc.CallOption) (*UserV1, error) {
-	out := new(UserV1)
+func (c *usersClient) MultiCreateUserV1(ctx context.Context, in *MultyCreateUserV1Request, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/ozonva.ova_exam_api.Users/MultiCreateUserV1", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *usersClient) DescribeUserV1(ctx context.Context, in *DescribeUserV1Request, opts ...grpc.CallOption) (*UserV1Response, error) {
+	out := new(UserV1Response)
 	err := c.cc.Invoke(ctx, "/ozonva.ova_exam_api.Users/DescribeUserV1", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -73,18 +86,31 @@ func (c *usersClient) RemoveUserV1(ctx context.Context, in *RemoveUserV1Request,
 	return out, nil
 }
 
+func (c *usersClient) UpdateUserV1(ctx context.Context, in *UpdateUserV1Request, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/ozonva.ova_exam_api.Users/UpdateUserV1", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UsersServer is the server API for Users service.
 // All implementations must embed UnimplementedUsersServer
 // for forward compatibility
 type UsersServer interface {
 	// Создание пользователя
 	CreateUserV1(context.Context, *CreateUserV1Request) (*empty.Empty, error)
+	// Создание пользователей
+	MultiCreateUserV1(context.Context, *MultyCreateUserV1Request) (*empty.Empty, error)
 	// Возвращает информацию о пользователе
-	DescribeUserV1(context.Context, *DescribeUserV1Request) (*UserV1, error)
+	DescribeUserV1(context.Context, *DescribeUserV1Request) (*UserV1Response, error)
 	// Список пользователей
 	ListUsersV1(context.Context, *empty.Empty) (*ListUsersV1Response, error)
 	// Удаляет пользователя
 	RemoveUserV1(context.Context, *RemoveUserV1Request) (*empty.Empty, error)
+	// Изменяет пользователя
+	UpdateUserV1(context.Context, *UpdateUserV1Request) (*empty.Empty, error)
 	mustEmbedUnimplementedUsersServer()
 }
 
@@ -95,7 +121,10 @@ type UnimplementedUsersServer struct {
 func (UnimplementedUsersServer) CreateUserV1(context.Context, *CreateUserV1Request) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateUserV1 not implemented")
 }
-func (UnimplementedUsersServer) DescribeUserV1(context.Context, *DescribeUserV1Request) (*UserV1, error) {
+func (UnimplementedUsersServer) MultiCreateUserV1(context.Context, *MultyCreateUserV1Request) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MultiCreateUserV1 not implemented")
+}
+func (UnimplementedUsersServer) DescribeUserV1(context.Context, *DescribeUserV1Request) (*UserV1Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DescribeUserV1 not implemented")
 }
 func (UnimplementedUsersServer) ListUsersV1(context.Context, *empty.Empty) (*ListUsersV1Response, error) {
@@ -103,6 +132,9 @@ func (UnimplementedUsersServer) ListUsersV1(context.Context, *empty.Empty) (*Lis
 }
 func (UnimplementedUsersServer) RemoveUserV1(context.Context, *RemoveUserV1Request) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveUserV1 not implemented")
+}
+func (UnimplementedUsersServer) UpdateUserV1(context.Context, *UpdateUserV1Request) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateUserV1 not implemented")
 }
 func (UnimplementedUsersServer) mustEmbedUnimplementedUsersServer() {}
 
@@ -131,6 +163,24 @@ func _Users_CreateUserV1_Handler(srv interface{}, ctx context.Context, dec func(
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(UsersServer).CreateUserV1(ctx, req.(*CreateUserV1Request))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Users_MultiCreateUserV1_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MultyCreateUserV1Request)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UsersServer).MultiCreateUserV1(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ozonva.ova_exam_api.Users/MultiCreateUserV1",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UsersServer).MultiCreateUserV1(ctx, req.(*MultyCreateUserV1Request))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -189,6 +239,24 @@ func _Users_RemoveUserV1_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Users_UpdateUserV1_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateUserV1Request)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UsersServer).UpdateUserV1(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ozonva.ova_exam_api.Users/UpdateUserV1",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UsersServer).UpdateUserV1(ctx, req.(*UpdateUserV1Request))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Users_ServiceDesc is the grpc.ServiceDesc for Users service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -201,6 +269,10 @@ var Users_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Users_CreateUserV1_Handler,
 		},
 		{
+			MethodName: "MultiCreateUserV1",
+			Handler:    _Users_MultiCreateUserV1_Handler,
+		},
+		{
 			MethodName: "DescribeUserV1",
 			Handler:    _Users_DescribeUserV1_Handler,
 		},
@@ -211,6 +283,10 @@ var Users_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RemoveUserV1",
 			Handler:    _Users_RemoveUserV1_Handler,
+		},
+		{
+			MethodName: "UpdateUserV1",
+			Handler:    _Users_UpdateUserV1_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

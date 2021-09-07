@@ -4,6 +4,7 @@ import (
 	"errors"
 	"math"
 	"ova-exam-api/internal/domain/entity/user"
+	desc "ova-exam-api/pkg/github.com/ozonva/ova-exam-api/pkg/ova-exam-api"
 )
 
 func Div(input []int, chunkSize int) [][]int {
@@ -71,6 +72,30 @@ func SplitToBulks(entities []user.User, butchSize uint) [][]user.User {
 	var floatButchSize = float64(len(entities)) / float64(butchSize)
 	var size = int(math.Ceil(floatButchSize))
 	result := make([][]user.User, size)
+	for i := 0; i < size; i++ {
+		currentChunkStart := i * int(butchSize)
+		var currentChunkEnd int
+
+		if currentChunkStart+int(butchSize) < len(entities) {
+			currentChunkEnd = currentChunkStart + int(butchSize)
+		} else {
+			currentChunkEnd = len(entities)
+		}
+
+		result[i] = entities[currentChunkStart:currentChunkEnd]
+	}
+
+	return result
+}
+
+func SplitUsersV1RequestToBulks(entities []*desc.UserV1Request, butchSize uint) [][]*desc.UserV1Request {
+	if len(entities) == 0 {
+		panic("Incorrect parameters")
+	}
+
+	var floatButchSize = float64(len(entities)) / float64(butchSize)
+	var size = int(math.Ceil(floatButchSize))
+	result := make([][]*desc.UserV1Request, size)
 	for i := 0; i < size; i++ {
 		currentChunkStart := i * int(butchSize)
 		var currentChunkEnd int
