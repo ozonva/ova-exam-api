@@ -1,9 +1,11 @@
 package repo
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	sq "github.com/Masterminds/squirrel"
+	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog/log"
 	"ova-exam-api/internal/domain/entity"
 	"ova-exam-api/internal/domain/entity/user"
@@ -20,11 +22,23 @@ type Repo interface {
 
 // NewRepo возвращает Repo
 func NewRepo(
-	db sq.BaseRunner,
+	connectionString string,
 ) Repo {
+	newDb, err := sqlx.Connect("pgx", connectionString)
+	if err != nil {
+		log.Fatal().Msg(fmt.Sprintf("failed to load driver: %v", err))
+	}
+
+	ctx := context.Background()
+
+	dbPingErr := newDb.PingContext(ctx)
+	if dbPingErr != nil {
+		log.Fatal().Msg(fmt.Sprintf("failed to connect to db: %v", err))
+	}
+
 	return &repo{
 		tableName: "users",
-		db: db,
+		db: newDb,
 	}
 }
 
